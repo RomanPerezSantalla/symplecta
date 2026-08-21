@@ -266,7 +266,7 @@ rigid pendulum released from 50 degrees, for 20 time units with $h=0.01$:
 | SHAKE | 9.99e-12 | **1.682e-01** | 4000 |
 | RATTLE | 9.89e-12 | **4.441e-16** | 4000 |
 
-Both hold the position constraint to the tolerance we asked for, as they should, (remember that $q_1$ comes
+Both hold the position constraint to the tolerance we asked for, as they should (remember that $q_1$ comes
 from the same place). The velocity constraint is another story.
 
 Notice also that RATTLE has an error of machine precision on the constraint instead of `tol` as there is no
