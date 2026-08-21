@@ -183,7 +183,7 @@ class Shake:
 
 class Rattle(Shake):
     """
-    Constrained Verlet with position *and* velocity projection stages.
+    Constrained Verlet with position and velocity projection stages.
     """
 
     order = 2

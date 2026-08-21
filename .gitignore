@@ -23,6 +23,3 @@ htmlcov/
 .vscode/
 .DS_Store
 Thumbs.db
-
-# Working notes, not published yet
-docs/
