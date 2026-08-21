@@ -143,28 +143,15 @@ class Shake:
                 f"system with constraints=Constraints(g=..., jac=...)"
             )
         con = system.constraints
-        g0 = con.jac(q)                                   # (m, n)
+        g0 = con.jac(q)
 
-        # unconstrained half-kick and drift
         p_unc = p + h / 2 * system.force(t, q)
         q_unc = q + h * system.velocity(p_unc)
 
-        # (h^2/2) M^-1 G0.T, shape (n, m) -- written B in the derivation. It
-        # turns a multiplier into the position shift that multiplier produces,
-        # so q1 = q_unc - shift @ lam. Note it sits on the *left* of the Newton
-        # system; the right-hand side is `residual`. Built column by column
-        # because `velocity` expects a 1-D momentum: on a 2-D argument the
-        # scalar and diagonal mass branches would broadcast the wrong way.
         shift = h * h / 2 * np.column_stack([system.velocity(row) for row in g0])
 
-        # 'frozen': the matrix is symmetric and constant across iterations,
-        # so factor it once here. 'exact': it moves with q1, so it is built
-        # inside the loop and there is nothing to factor up front.
         _chol = _factor_spd(g0 @ shift) if self.newton == "frozen" else None
 
-        # Newton on  g(q_unc - shift @ lam) = 0, starting from lam = 0 (that is,
-        # from the unconstrained position). q1 and residual are established
-        # before the loop so both are defined on every path out of it.
         lam = np.zeros(g0.shape[0])
         q1 = q_unc
         residual = con.g(q1)
@@ -188,7 +175,6 @@ class Shake:
                 f"tol {self.tol:.3e}.{hint}"
             )
 
-        # q1 already holds q_unc - shift @ lam from the loop
         q_new = q1
         p_half = p_unc - h / 2 * (g0.T @ lam)
         p_new = p_half + h / 2 * system.force(t + h, q_new)
@@ -205,11 +191,8 @@ class Rattle(Shake):
     handles_constraints = True
 
     def step(self, t, q, p, h, system):
-        # stage one: SHAKE. Its returned momentum is the unprojected
-        # half-kick, i.e. exactly the p1_unc stage two needs.
-        q1, p1_unc = super().step(t, q, p, h, system)
 
-        # stage two: project the momentum onto the constraint manifold
+        q1, p1_unc = super().step(t, q, p, h, system)
         con = system.constraints
         g1 = con.jac(q1)
         minv_g1t = np.column_stack([system.velocity(row) for row in g1])
