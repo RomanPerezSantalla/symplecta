@@ -93,7 +93,7 @@ the same `(n_dof, n_points)` array layout, so `res.q[0]` is the trajectory of th
 `verlet` is the sensible default for a separable system. `yoshida4` costs one more force evaluation and buys
 about three orders of magnitude in the energy band, and `yoshida6` is worth its seven for a long run. Given a
 fixed budget of force evaluations rather than a fixed step, the gains are smaller than that table suggests;
-[the methods document](docs/methods.md) compares them at equal cost. `rattle` is preferable to `shake` in basically
+[the methods document][methods-doc] compares them at equal cost. `rattle` is preferable to `shake` in basically
 every scenario.
 
 The solver refuses combinations that would quietly give you the wrong answer, rather than running them.
@@ -102,17 +102,17 @@ constrained system, or a mass alongside the general form.
 
 ## Documentation
 
-The documents in [`docs/`](docs) are written to be read in order, and are meant to explain the methods rather
+The documents in [`docs/`][docs-dir] are written to be read in order, and are meant to explain the methods rather
 than just list the API. I wrote them because I found SHAKE and RATTLE genuinely hard to pick up from the original
 papers.
 
-- [Introduction](docs/introduction.md) — equations of motion, separable Hamiltonians, and why a regular method
+- [Introduction][intro-doc] — equations of motion, separable Hamiltonians, and why a regular method
   loses energy while a symplectic one does not.
-- [General methods](docs/methods.md) — symplectic Euler, velocity Verlet and the Yoshida compositions, all
+- [General methods][methods-doc] — symplectic Euler, velocity Verlet and the Yoshida compositions, all
   built out of drifts and kicks.
-- [Constraint methods](docs/constraints.md) — Lagrange multipliers from the action, then SHAKE and RATTLE and
+- [Constraint methods][constraints-doc] — Lagrange multipliers from the action, then SHAKE and RATTLE and
   what separates them.
-- [Implicit midpoint](docs/implicit_midpoint.md) — what to do when the Hamiltonian does not split.
+- [Implicit midpoint][midpoint-doc] — what to do when the Hamiltonian does not split.
 
 ## Design decisions
 
@@ -174,3 +174,10 @@ the code and the text from the docs is original.
 ## License
 
 MIT
+
+<!-- PyPI renders the README outside the repo, so these must be absolute -->
+[docs-dir]: https://github.com/RomanPerezSantalla/symplecta/tree/main/docs
+[intro-doc]: https://github.com/RomanPerezSantalla/symplecta/blob/main/docs/introduction.md
+[methods-doc]: https://github.com/RomanPerezSantalla/symplecta/blob/main/docs/methods.md
+[constraints-doc]: https://github.com/RomanPerezSantalla/symplecta/blob/main/docs/constraints.md
+[midpoint-doc]: https://github.com/RomanPerezSantalla/symplecta/blob/main/docs/implicit_midpoint.md
