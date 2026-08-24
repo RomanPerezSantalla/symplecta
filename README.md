@@ -97,7 +97,7 @@ fixed budget of force evaluations rather than a fixed step, the gains are smalle
 every scenario.
 
 The solver refuses combinations that would quietly give you the wrong answer, rather than running them.
-Unallowed combinations are: explicit method on a non-separable Hamiltonian, an unconstrained method on a 
+Unallowed combinations are: an explicit method on a non-separable Hamiltonian, an unconstrained method on a 
 constrained system, or a mass alongside the general form.
 
 ## Documentation
@@ -162,7 +162,7 @@ ruff check .
 ```
 
 ## AI Usage
-AI has been used to design a scaffolding for the project, design tests and correct bugs and the documents. Most of 
+AI has been used to design a scaffolding for the project, design tests, correct bugs and revise the documents. Most of 
 the code and the text from the docs is original.
 
 ## License
