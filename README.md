@@ -19,7 +19,7 @@ behavior and constraint satisfaction for each of them. The API may still move.
 ## Install
 
 ```bash
-pip install -e ".[dev]"
+pip install symplecta
 ```
 
 ## Using it
@@ -152,6 +152,12 @@ The original papers for the methods here:
   [doi:10.1016/0375-9601(90)90092-3](https://doi.org/10.1016/0375-9601%2890%2990092-3)
 
 ## Development
+
+Clone the repository, then install it in editable mode with the test and lint tools:
+
+```bash
+pip install -e ".[dev]"
+```
 
 ```bash
 pytest
