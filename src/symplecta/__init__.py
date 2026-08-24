@@ -12,7 +12,7 @@ from symplecta.ivp import (
     solve_symplectic_ivp,
 )
 
-__version__ = "0.0.1.dev0"
+__version__ = "0.1.0"
 
 __all__ = [
     "Constraints",
