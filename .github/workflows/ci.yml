@@ -47,6 +47,15 @@ jobs:
 
       - name: Build and check the distributions
         run: |
-          python -m pip install --upgrade pip build twine
+          python -m pip install --upgrade pip build twine pytest
           python -m build
           python -m twine check --strict dist/*
+
+      # twine check only validates metadata. This runs the suite against the
+      # installed wheel, so a module missing from the package is caught here
+      # rather than by whoever pip installs it. The src layout is what makes
+      # this work: `import symplecta` cannot reach src/, only site-packages.
+      - name: Test the wheel rather than the source tree
+        run: |
+          python -m pip install dist/*.whl
+          python -m pytest tests -q
