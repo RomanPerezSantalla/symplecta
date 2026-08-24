@@ -105,6 +105,64 @@ class Yoshida4:
         return q, p
 
 
+class _Composition:
+    """
+    Composition of position-Verlet substeps, the same shape as Yoshida4 above.
+
+    A subclass supplies ``weights``, a palindromic tuple of substep sizes that
+    sums to 1. Written out, one step is a chain of drifts and kicks
+
+        drift c[0], kick w[0], drift c[1], kick w[1], ... , kick w[-1], drift c[-1]
+    """
+
+    interface = "separable"
+    handles_constraints = False
+    weights = ()
+    drifts = ()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        w = cls.weights
+        if w:
+            cls.drifts = (
+                (w[0] / 2,)
+                + tuple((w[i - 1] + w[i]) / 2 for i in range(1, len(w)))
+                + (w[-1] / 2,)
+            )
+
+    def step(self, t, q, p, h, system):
+        c = self.drifts
+        for i, wi in enumerate(self.weights):
+            q = q + c[i] * h * system.velocity(p)
+            t = t + c[i] * h
+            p = p + wi * h * system.force(t, q)
+        return q + c[-1] * h * system.velocity(p), p
+
+
+class Yoshida6(_Composition):
+    """
+    Sixth-order Yoshida, seven substeps.
+    """
+
+    order = 6
+    _w = (-1.17767998417887, 0.235573213359357, 0.784513610477560)
+    _w0 = 1 - 2 * sum(_w)
+    weights = (_w[2], _w[1], _w[0], _w0, _w[0], _w[1], _w[2])
+
+
+class Yoshida8(_Composition):
+    """
+    Eighth-order Yoshida, fifteen substeps.
+    """
+
+    order = 8
+    _w = (0.102799849391985, -1.96061023297549, 1.93813913762276,
+          -0.158240635368243, -1.44485223686048, 0.253693336566229,
+          0.914844246229740)
+    _w0 = 1 - 2 * sum(_w)
+    weights = tuple(reversed(_w)) + (_w0,) + _w
+
+
 class Shake:
     """
     Position-only constrained variant of Verlet.
@@ -249,7 +307,7 @@ class ImplicitMidpoint:
             return self.tol
         warnings.warn(
             f"dHdq/dHdp are finite differences of `hamiltonian`, accurate to "
-            f"about {floor:.1e} and tol={self.tol:.1e} is below that."
+            f"about {floor:.1e} and tol={self.tol:.1e} is below that. "
             f"Provide exact dHdq/dHdp for a solve within tol.",
             RuntimeWarning,
             stacklevel=3,
@@ -261,6 +319,8 @@ METHODS = {
     "symplectic_euler": SymplecticEuler,
     "verlet": VelocityVerlet,
     "yoshida4": Yoshida4,
+    "yoshida6": Yoshida6,
+    "yoshida8": Yoshida8,
     "rattle": Rattle,
     "shake": Shake,
     "implicit_midpoint": ImplicitMidpoint,

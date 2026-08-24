@@ -27,9 +27,16 @@ from helpers import (
 from symplecta import solve_symplectic_ivp as solve
 from symplecta.methods import METHODS
 
-EXPLICIT = ["symplectic_euler", "verlet", "yoshida4"]
-# high-order methods reach round-off sooner, so they get coarser grids
-STEPS = {1: (0.02, 0.01, 0.005), 2: (0.02, 0.01, 0.005), 4: (0.1, 0.05, 0.025)}
+EXPLICIT = ["symplectic_euler", "verlet", "yoshida4", "yoshida6"]
+# high-order methods reach round-off sooner, so they get coarser grids. Every
+# step divides its interval exactly, so the run uses the h asked for rather
+# than the reduced one the driver would otherwise pick.
+STEPS = {
+    1: (0.02, 0.01, 0.005),
+    2: (0.02, 0.01, 0.005),
+    4: (0.1, 0.05, 0.025),
+    6: (0.5, 0.25, 0.125),
+}
 
 
 def _final_error(method, problem, q0, p0, tf, h, exact, **kw):
@@ -49,7 +56,7 @@ def test_explicit_methods_converge_at_their_order(name):
     assert observed_order(hs, errors) == pytest.approx(order, abs=0.25)
 
 
-@pytest.mark.parametrize("name", ["verlet", "yoshida4"])
+@pytest.mark.parametrize("name", ["verlet", "yoshida4", "yoshida6"])
 def test_order_survives_a_time_dependent_force(name):
     """Regression: force evaluated at the wrong time within a step.
 
@@ -65,6 +72,26 @@ def test_order_survives_a_time_dependent_force(name):
     ]
     assert observed_order(hs, errors) == pytest.approx(order, abs=0.25)
 
+
+def test_yoshida8_is_accurate_even_though_its_rate_is_not_measurable():
+    """Yoshida 8 has no clean order window on this problem in float64.
+
+    Between an h coarse enough for the h^8 term to dominate the h^10 one and
+    an h fine enough to still sit above round-off there is almost nothing
+    left, and the fitted slope lands anywhere between 6 and 9. The order is
+    measured on the energy band instead, in test_energy.py; what is checked
+    here is that the method is doing what an eighth-order one should.
+    """
+    exact, _ = sho_exact(1.0)
+    eight = _final_error("yoshida8", SHO, SHO_Q0, SHO_P0, 1.0, 0.25, exact)
+    six = _final_error("yoshida6", SHO, SHO_Q0, SHO_P0, 1.0, 0.25, exact)
+    assert eight < six / 100
+
+    # same time-placement regression as above, as a threshold rather than a
+    # slope: freezing t inside the step leaves an error of 9e-3 here
+    driven = _final_error("yoshida8", DRIVEN, SHO_Q0, SHO_P0, 5.0, 0.125,
+                          driven_exact(5.0))
+    assert driven < 1e-9
 
 def test_implicit_midpoint_converges_at_second_order():
     hs = (0.04, 0.02, 0.01)
@@ -107,5 +134,6 @@ def test_constrained_methods_converge_against_independent_physics(name):
 
 def test_every_method_in_the_registry_is_covered():
     """Fail loudly when a new method is added without a convergence test."""
-    covered = set(EXPLICIT) | {"implicit_midpoint", "shake", "rattle"}
+    covered = set(EXPLICIT) | {"yoshida8", "implicit_midpoint",
+                              "shake", "rattle"}
     assert covered == set(METHODS)

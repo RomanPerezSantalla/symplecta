@@ -20,7 +20,16 @@ from helpers import (
 from symplecta import solve_symplectic_ivp as solve
 from symplecta.methods import METHODS
 
-EXPLICIT = ["symplectic_euler", "verlet", "yoshida4"]
+EXPLICIT = ["symplectic_euler", "verlet", "yoshida4", "yoshida6", "yoshida8"]
+# the band reaches round-off at the order the method converges at, so the
+# high-order ones need their own grids to be measured on
+BAND_STEPS = {
+    1: (0.08, 0.04, 0.02),
+    2: (0.08, 0.04, 0.02),
+    4: (0.08, 0.04, 0.02),
+    6: (0.4, 0.2, 0.1),
+    8: (0.125, 0.1, 0.08),
+}
 
 
 @pytest.mark.parametrize("name", EXPLICIT)
@@ -41,7 +50,7 @@ def test_energy_stays_bounded_over_a_long_run(name):
 @pytest.mark.parametrize("name", EXPLICIT)
 def test_energy_band_shrinks_at_the_method_order(name):
     order = METHODS[name].order
-    hs = (0.08, 0.04, 0.02)
+    hs = BAND_STEPS[order]
     bands = [
         energy_band(solve((0.0, 60.0), SHO_Q0, SHO_P0, method=name, h=h, **SHO))
         for h in hs
@@ -50,13 +59,16 @@ def test_energy_band_shrinks_at_the_method_order(name):
 
 
 def test_higher_order_methods_conserve_energy_better():
-    kw = dict(h=0.02, **SHO)
+    # coarse enough that even yoshida8 is still above round-off here
+    kw = dict(h=0.1, **SHO)
     bands = {
         name: energy_band(solve((0.0, 60.0), SHO_Q0, SHO_P0, method=name, **kw))
         for name in EXPLICIT
     }
     assert bands["verlet"] < bands["symplectic_euler"] / 10
     assert bands["yoshida4"] < bands["verlet"] / 10
+    assert bands["yoshida6"] < bands["yoshida4"] / 10
+    assert bands["yoshida8"] < bands["yoshida6"] / 10
 
 
 def test_implicit_midpoint_conserves_a_quadratic_invariant_exactly():
